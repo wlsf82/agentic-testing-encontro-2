@@ -1,25 +1,33 @@
-describe('EngageSphere Test Suite', () => {
-  const API_BASE_URL = 'https://whispering-meadow-44853-562f20cee791.herokuapp.com'
+describe('EngageSphere', () => {
+  beforeEach(() => {
+    cy.setCookie('cookieConsent', 'declined')
+    cy.visit('/')
+  })
 
   context('Core Application Features', () => {
-    beforeEach(() => {
-      cy.setCookie('cookieConsent', 'declined')
-      cy.visit('/')
-    })
-
     it('successfully toggles between light and dark themes', () => {
-      cy.get('body').should('have.attr', 'data-theme', 'light')
+      // Arrange
+      cy.get('body').as('body')
+      cy.get('button[aria-label^="theme "]').as('themeToggle')
 
-      cy.get('button[aria-label^="theme "]').click()
+      // Act & Assert - Initial state
+      cy.get('@body').should('have.attr', 'data-theme', 'light')
 
-      cy.get('body').should('have.attr', 'data-theme', 'dark')
+      // Act - Toggle to dark
+      cy.get('@themeToggle').click()
 
-      cy.get('button[aria-label^="theme "]').click()
+      // Assert
+      cy.get('@body').should('have.attr', 'data-theme', 'dark')
 
-      cy.get('body').should('have.attr', 'data-theme', 'light')
+      // Act - Toggle back to light
+      cy.get('@themeToggle').click()
+
+      // Assert
+      cy.get('@body').should('have.attr', 'data-theme', 'light')
     })
 
     it('displays a personalized greeting when a name is entered', () => {
+      // Arrange
       const testName = 'John Doe'
       const currentDate = new Date().toLocaleDateString('en-US', {
         month: 'long',
@@ -27,42 +35,32 @@ describe('EngageSphere Test Suite', () => {
         year: 'numeric'
       })
 
-      cy.get('input[placeholder="E.g., John Doe"]')
-        .type(testName)
+      cy.get('input[placeholder="E.g., John Doe"]').as('nameInput')
 
-      cy.get('h2')
-        .contains('Hi')
-        .should('contain', `Hi ${testName}!`)
+      // Act
+      cy.get('@nameInput').type(testName)
+
+      // Assert
+      cy.contains('h2', 'Hi')
+        .should('be.visible')
+        .and('contain', `Hi ${testName}!`)
         .and('contain', currentDate)
-    })
-  })
-
-  context('Cookie Consent Management', () => {
-    beforeEach(() => {
-      cy.visit('/')
-    })
-
-    it('hides the cookie banner when the "Accept" button is clicked', () => {
-      cy.get('button').contains('Accept').should('be.visible').click()
-      cy.get('button').contains('Accept').should('not.exist')
-    })
-
-    it('hides the cookie banner when the "Decline" button is clicked', () => {
-      cy.visit('/') // Refresh to show cookie banner again
-      cy.get('button').contains('Decline').should('be.visible').click()
-      cy.get('button').contains('Decline').should('not.exist')
     })
   })
 
   context('Customer List and Data Filtering', () => {
     beforeEach(() => {
-      cy.setCookie('cookieConsent', 'declined')
-      cy.visit('/')
+      cy.get('select#sizeFilter').as('sizeFilter')
+      cy.get('select#industryFilter').as('industryFilter')
+      cy.get('table').as('customerTable')
     })
 
     context('Data Loading and Filtering', () => {
       it('successfully loads the first page of customers on start', () => {
-        cy.intercept('GET', `${API_BASE_URL}/customers?page=1&limit=10&size=All&industry=All`, {
+        // Arrange
+        const apiUrl = Cypress.expose('apiUrl')
+
+        cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=All&industry=All`, {
           statusCode: 200,
           body: {
             customers: [
@@ -82,14 +80,21 @@ describe('EngageSphere Test Suite', () => {
           }
         }).as('initialLoad')
 
+        // Act
         cy.visit('/')
+
         cy.wait('@initialLoad')
-        cy.get('table').should('be.visible')
-        cy.get('table').contains('Jacobs Co')
+
+        // Assert
+        cy.get('@customerTable').should('be.visible')
+        cy.get('@customerTable').contains('Jacobs Co').should('be.visible')
       })
 
       it('updates the customer list when a size filter is selected', () => {
-        cy.intercept('GET', `${API_BASE_URL}/customers?page=1&limit=10&size=Small&industry=All`, {
+        // Arrange
+        const apiUrl = Cypress.expose('apiUrl')
+
+        cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=Small&industry=All`, {
           statusCode: 200,
           body: {
             customers: [
@@ -109,13 +114,20 @@ describe('EngageSphere Test Suite', () => {
           }
         }).as('filterBySize')
 
-        cy.get('select#sizeFilter').select('Small')
+        // Act
+        cy.get('@sizeFilter').select('Small')
+
         cy.wait('@filterBySize')
-        cy.get('table').contains('Small Corp')
+
+        // Assert
+        cy.get('@customerTable').contains('Small Corp').should('be.visible')
       })
 
       it('updates the customer list when an industry filter is selected', () => {
-        cy.intercept('GET', `${API_BASE_URL}/customers?page=1&limit=10&size=All&industry=Technology`, {
+        // Arrange
+        const apiUrl = Cypress.expose('apiUrl')
+
+        cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=All&industry=Technology`, {
           statusCode: 200,
           body: {
             customers: [
@@ -135,15 +147,22 @@ describe('EngageSphere Test Suite', () => {
           }
         }).as('filterByIndustry')
 
-        cy.get('select#industryFilter').select('Technology')
+        // Act
+        cy.get('@industryFilter').select('Technology')
+
         cy.wait('@filterByIndustry')
-        cy.get('table').contains('Tech Innovations')
+
+        // Assert
+        cy.get('@customerTable').contains('Tech Innovations').should('be.visible')
       })
     })
 
     context('Pagination and Display Limits', () => {
       it('loads the next set of customers when the "Next" button is clicked', () => {
-        cy.intercept('GET', `${API_BASE_URL}/customers?page=2&limit=10&size=All&industry=All`, {
+        // Arrange
+        const apiUrl = Cypress.expose('apiUrl')
+
+        cy.intercept('GET', `${apiUrl}/customers?page=2&limit=10&size=All&industry=All`, {
           statusCode: 200,
           body: {
             customers: [
@@ -163,13 +182,20 @@ describe('EngageSphere Test Suite', () => {
           }
         }).as('nextPage')
 
-        cy.get('button').contains('Next').click()
+        // Act
+        cy.contains('button', 'Next').click()
+
         cy.wait('@nextPage')
-        cy.get('table').contains('Page Two Company')
+
+        // Assert
+        cy.get('@customerTable').contains('Page Two Company').should('be.visible')
       })
 
       it('updates the number of customers displayed per page', () => {
-        cy.intercept('GET', `${API_BASE_URL}/customers?page=1&limit=20&size=All&industry=All`, {
+        // Arrange
+        const apiUrl = Cypress.expose('apiUrl')
+
+        cy.intercept('GET', `${apiUrl}/customers?page=1&limit=20&size=All&industry=All`, {
           statusCode: 200,
           body: {
             customers: Array.from({ length: 20 }, (_, i) => ({
@@ -187,60 +213,76 @@ describe('EngageSphere Test Suite', () => {
           }
         }).as('paginationLimit')
 
+        // Act
         cy.get('select[aria-label="Pagination limit"]').select('20')
+
         cy.wait('@paginationLimit')
-        cy.get('table tbody tr').should('have.length', 20)
+
+        // Assert
+        cy.get('@customerTable')
+          .find('tbody tr')
+          .should('have.length', 20)
       })
     })
   })
 
   context('Customer Details Management', () => {
     beforeEach(() => {
-      cy.setCookie('cookieConsent', 'declined')
-      cy.visit('/')
-      // Ensure we have a customer to view
-      cy.get('table').should('be.visible')
+      cy.get('table').as('customerTable')
     })
 
     it('navigates to the customer details view', () => {
+      // Arrange
+      cy.get('@customerTable').should('be.visible')
+      cy.get('button[aria-label^="View company:"]').should('have.length.at.least', 1)
+
+      // Act
       cy.get('button[aria-label^="View company:"]').first().click()
+
+      // Assert
       cy.contains('Customer Details').should('be.visible')
-      cy.get('p').contains('Company ID:').should('be.visible')
-      cy.get('p').contains('Company name:').should('be.visible')
+      cy.contains('p', 'Company ID:').should('be.visible')
+      cy.contains('p', 'Company name:').should('be.visible')
     })
 
     it('toggles the visibility of the customer\'s address', () => {
+      // Arrange
+      cy.get('button[aria-label^="View company:"]').should('have.length.at.least', 1)
       cy.get('button[aria-label^="View company:"]').first().click()
 
-      // Show address
-      cy.get('button').contains('Show address').click()
-      cy.get('button').contains('Hide address').should('be.visible')
+      // Act - Show address
+      cy.contains('button', 'Show address').click()
 
-      // Verify address details are visible
+      // Assert
+      cy.contains('button', 'Hide address').should('be.visible')
       cy.contains('Address').should('be.visible')
 
-      // Hide address
-      cy.get('button').contains('Hide address').click()
-      cy.get('button').contains('Show address').should('be.visible')
+      // Act - Hide address
+      cy.contains('button', 'Hide address').click()
+
+      // Assert
+      cy.contains('button', 'Show address').should('be.visible')
     })
 
     it('returns to the customer list view from the details view', () => {
+      // Arrange
+      cy.get('button[aria-label^="View company:"]').should('have.length.at.least', 1)
       cy.get('button[aria-label^="View company:"]').first().click()
+
       cy.contains('Customer Details').should('be.visible')
 
-      cy.get('button').contains('Back').click()
-      cy.get('table').should('be.visible')
+      // Act
+      cy.contains('button', 'Back').click()
+
+      // Assert
+      cy.get('@customerTable').should('be.visible')
       cy.contains('Customer Details').should('not.exist')
     })
   })
 
   context('External Integrations and Data Export', () => {
-    beforeEach(() => {
-      cy.setCookie('cookieConsent', 'declined')
-      cy.visit('/')
-    })
-
     it('contains valid links to external resources in the footer', () => {
+      // Arrange
       const expectedLinks = {
         'Podcast': 'https://open.spotify.com/show/5HFlqWkk6qtgJquUixyuKo',
         'Courses': 'https://talking-about-testing.vercel.app/',
@@ -248,20 +290,23 @@ describe('EngageSphere Test Suite', () => {
         'YouTube': 'https://youtube.com/@talkingabouttesting'
       }
 
+      // Act & Assert
       Object.entries(expectedLinks).forEach(([text, href]) => {
-        cy.get('a').contains(text)
-          .should('have.attr', 'href', href)
+        cy.contains('a', text)
+          .should('be.visible')
+          .and('have.attr', 'href', href)
           .and('have.attr', 'target', '_blank')
       })
     })
 
     it('initiates a CSV download when the button is clicked', () => {
-      // Set up download verification
+      // Arrange
       const downloadsFolder = Cypress.config('downloadsFolder')
 
-      cy.get('button').contains('Download CSV').click()
+      // Act
+      cy.contains('button', 'Download CSV').click()
 
-      // Verify CSV file was downloaded
+      // Assert
       cy.readFile(`${downloadsFolder}/customers.csv`, { timeout: 10000 })
         .should('exist')
         .and('contain', 'Company_Name')
@@ -270,12 +315,16 @@ describe('EngageSphere Test Suite', () => {
 
   context('Combined Scenarios', () => {
     beforeEach(() => {
-      cy.setCookie('cookieConsent', 'declined')
-      cy.visit('/')
+      cy.get('select#sizeFilter').as('sizeFilter')
+      cy.get('select#industryFilter').as('industryFilter')
+      cy.get('table').as('customerTable')
     })
 
     it('filters data by both size and industry', () => {
-      cy.intercept('GET', `${API_BASE_URL}/customers?page=1&limit=10&size=Large%20Enterprise&industry=Technology`, {
+      // Arrange
+      const apiUrl = Cypress.expose('apiUrl')
+
+      cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=Large Enterprise&industry=Technology`, {
         statusCode: 200,
         body: {
           customers: [
@@ -295,31 +344,39 @@ describe('EngageSphere Test Suite', () => {
         }
       }).as('combinedFilter')
 
-      cy.get('select#sizeFilter').select('Large Enterprise')
-      cy.get('select#industryFilter').select('Technology')
+      // Act
+      cy.get('@sizeFilter').select('Large Enterprise')
+      cy.get('@industryFilter').select('Technology')
+
       cy.wait('@combinedFilter')
-      cy.get('table').contains('Large Tech Corp')
+
+      // Assert
+      cy.get('@customerTable').contains('Large Tech Corp').should('be.visible')
     })
 
     it('maintains filter state after viewing customer details and returning', () => {
-      // Apply a filter
-      cy.get('select#industryFilter').select('Technology')
-      cy.get('select#industryFilter').should('have.value', 'Technology')
+      // Act - Apply a filter
+      cy.get('@industryFilter').select('Technology')
 
-      // View details
+      // Assert
+      cy.get('@industryFilter').should('have.value', 'Technology')
+
+      // Act - View details
+      cy.get('button[aria-label^="View company:"]').should('have.length.at.least', 1)
       cy.get('button[aria-label^="View company:"]').first().click()
 
-      // Go back
-      cy.get('button').contains('Back').click()
+      // Act - Go back
+      cy.contains('button', 'Back').click()
 
-      // Verify filter is still applied
-      cy.get('select#industryFilter').should('have.value', 'Technology')
+      // Assert - Verify filter is still applied
+      cy.get('@industryFilter').should('have.value', 'Technology')
     })
 
     it('handles pagination with active filters', () => {
-      cy.get('select#sizeFilter').select('Small')
+      // Arrange
+      const apiUrl = Cypress.expose('apiUrl')
 
-      cy.intercept('GET', `${API_BASE_URL}/customers?page=2&limit=10&size=Small&industry=All`, {
+      cy.intercept('GET', `${apiUrl}/customers?page=2&limit=10&size=Small&industry=All`, {
         statusCode: 200,
         body: {
           customers: [
@@ -339,10 +396,43 @@ describe('EngageSphere Test Suite', () => {
         }
       }).as('paginationWithFilter')
 
-      cy.get('button').contains('Next').click()
+      // Act
+      cy.get('@sizeFilter').select('Small')
+      cy.contains('button', 'Next').click()
+
       cy.wait('@paginationWithFilter')
-      cy.get('table').contains('Small Business Page 2')
-      cy.get('select#sizeFilter').should('have.value', 'Small')
+
+      // Assert
+      cy.get('@customerTable').contains('Small Business Page 2').should('be.visible')
+      cy.get('@sizeFilter').should('have.value', 'Small')
     })
+  })
+})
+
+
+describe('Cookie Consent Management', () => {
+  beforeEach(() => {
+    cy.clearCookie('cookieConsent')
+    cy.visit('/')
+    cy.contains('button', 'Accept').as('acceptButton')
+    cy.contains('button', 'Decline').as('declineButton')
+  })
+
+  it('hides the cookie banner when the "Accept" button is clicked', () => {
+    // Act
+    cy.get('@acceptButton').should('be.visible').click()
+
+    // Assert
+    cy.get('body').should('be.visible')
+    cy.get('@acceptButton').should('not.exist')
+  })
+
+  it('hides the cookie banner when the "Decline" button is clicked', () => {
+    // Act
+    cy.get('@declineButton').should('be.visible').click()
+
+    // Assert
+    cy.get('body').should('be.visible')
+    cy.get('@declineButton').should('not.exist')
   })
 })
