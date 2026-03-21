@@ -210,8 +210,8 @@ describe('EngageSphere', () => {
             })),
             pageInfo: {
               currentPage: 1,
-              totalPages: 5,
-              totalCustomers: 100
+              totalPages: 3,
+              totalCustomers: 50
             }
           }
         }).as('paginationLimit')
