@@ -7,23 +7,22 @@ describe('EngageSphere', () => {
   context('Core Application Features', () => {
     it('successfully toggles between light and dark themes', () => {
       // Arrange
-      cy.get('body').as('body')
       cy.get('button[aria-label^="theme "]').as('themeToggle')
 
-      // Act & Assert - Initial state
-      cy.get('@body').should('have.attr', 'data-theme', 'light')
+      // Assert - Initial state
+      cy.get('body').should('have.attr', 'data-theme', 'light')
 
       // Act - Toggle to dark
       cy.get('@themeToggle').click()
 
       // Assert
-      cy.get('@body').should('have.attr', 'data-theme', 'dark')
+      cy.get('body').should('have.attr', 'data-theme', 'dark')
 
       // Act - Toggle back to light
       cy.get('@themeToggle').click()
 
       // Assert
-      cy.get('@body').should('have.attr', 'data-theme', 'light')
+      cy.get('body').should('have.attr', 'data-theme', 'light')
     })
 
     it('displays a personalized greeting when a name is entered', () => {
