@@ -204,6 +204,7 @@ describe('EngageSphere', () => {
               id: i + 1,
               name: `Company ${i + 1}`,
               employees: 100 + i,
+
               industry: 'HR',
               size: 'Medium'
             })),
@@ -324,7 +325,7 @@ describe('EngageSphere', () => {
       // Arrange
       const apiUrl = Cypress.expose('apiUrl')
 
-      cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=Large Enterprise&industry=Technology`, {
+      cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=Large%20Enterprise&industry=Technology`, {
         statusCode: 200,
         body: {
           customers: [
@@ -333,7 +334,7 @@ describe('EngageSphere', () => {
               name: 'Large Tech Corp',
               employees: 5000,
               industry: 'Technology',
-              size: 'Large'
+              size: 'LargeEnterprise'
             }
           ],
           pageInfo: {
