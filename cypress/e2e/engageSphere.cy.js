@@ -63,8 +63,6 @@ describe('EngageSphere', () => {
 
     beforeEach(() => {
       apiUrl = Cypress.expose('apiUrl')
-
-      cy.get('table').as('customerTable')
     })
 
     context('Data Loading and Filtering', () => {
@@ -164,8 +162,6 @@ describe('EngageSphere', () => {
     context('Pagination and Display Limits', () => {
       it('loads the next set of customers when the "Next" button is clicked', () => {
         // Arrange
-        const apiUrl = Cypress.expose('apiUrl')
-
         cy.intercept('GET', `${apiUrl}/customers?page=2&limit=10&size=All&industry=All`, {
           statusCode: 200,
           body: {
@@ -192,13 +188,15 @@ describe('EngageSphere', () => {
         cy.wait('@nextPage')
 
         // Assert
-        cy.get('@customerTable').contains('Page Two Company').should('be.visible')
+        cy.contains('table', 'Page Two Company').should('be.visible')
+      })
+
+      it.skip('loads the previous set of customers when the "Prev" button is clicked', () => {
+        // TODO: Implemement this scenario later.
       })
 
       it('updates the number of customers displayed per page', () => {
         // Arrange
-        const apiUrl = Cypress.expose('apiUrl')
-
         cy.intercept('GET', `${apiUrl}/customers?page=1&limit=20&size=All&industry=All`, {
           statusCode: 200,
           body: {
@@ -206,7 +204,7 @@ describe('EngageSphere', () => {
               id: i + 1,
               name: `Company ${i + 1}`,
               employees: 100 + i,
-              industry: 'Various',
+              industry: 'HR',
               size: 'Medium'
             })),
             pageInfo: {
@@ -223,9 +221,7 @@ describe('EngageSphere', () => {
         cy.wait('@paginationLimit')
 
         // Assert
-        cy.get('@customerTable')
-          .find('tbody tr')
-          .should('have.length', 20)
+        cy.get('table tbody tr').should('have.length', 20)
       })
     })
   })
