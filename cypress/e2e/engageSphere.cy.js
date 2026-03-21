@@ -34,15 +34,12 @@ describe('EngageSphere', () => {
         year: 'numeric'
       })
 
-      cy.get('input[placeholder="E.g., John Doe"]').as('nameInput')
-
       // Act
-      cy.get('@nameInput').type(testName)
+      cy.get('input[placeholder="E.g., John Doe"]').type(testName)
 
       // Assert
-      cy.contains('h2', 'Hi')
+      cy.contains('h2', `Hi ${testName}!`)
         .should('be.visible')
-        .and('contain', `Hi ${testName}!`)
         .and('contain', currentDate)
     })
   })
