@@ -59,17 +59,17 @@ describe('EngageSphere', () => {
   })
 
   context('Customer List and Data Filtering', () => {
+    let apiUrl
+
     beforeEach(() => {
-      cy.get('select#sizeFilter').as('sizeFilter')
-      cy.get('select#industryFilter').as('industryFilter')
+      apiUrl = Cypress.expose('apiUrl')
+
       cy.get('table').as('customerTable')
     })
 
     context('Data Loading and Filtering', () => {
       it('successfully loads the first page of customers on start', () => {
         // Arrange
-        const apiUrl = Cypress.expose('apiUrl')
-
         cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=All&industry=All`, {
           statusCode: 200,
           body: {
@@ -96,14 +96,11 @@ describe('EngageSphere', () => {
         cy.wait('@initialLoad')
 
         // Assert
-        cy.get('@customerTable').should('be.visible')
-        cy.get('@customerTable').contains('Jacobs Co').should('be.visible')
+        cy.contains('table', 'Jacobs Co').should('be.visible')
       })
 
       it('updates the customer list when a size filter is selected', () => {
         // Arrange
-        const apiUrl = Cypress.expose('apiUrl')
-
         cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=Small&industry=All`, {
           statusCode: 200,
           body: {
@@ -125,18 +122,15 @@ describe('EngageSphere', () => {
         }).as('filterBySize')
 
         // Act
-        cy.get('@sizeFilter').select('Small')
+        cy.get('select#sizeFilter').select('Small')
 
         cy.wait('@filterBySize')
 
         // Assert
-        cy.get('@customerTable').contains('Small Corp').should('be.visible')
+        cy.contains('table', 'Small Corp').should('be.visible')
       })
 
       it('updates the customer list when an industry filter is selected', () => {
-        // Arrange
-        const apiUrl = Cypress.expose('apiUrl')
-
         cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=All&industry=Technology`, {
           statusCode: 200,
           body: {
@@ -158,12 +152,12 @@ describe('EngageSphere', () => {
         }).as('filterByIndustry')
 
         // Act
-        cy.get('@industryFilter').select('Technology')
+        cy.get('select#industryFilter').select('Technology')
 
         cy.wait('@filterByIndustry')
 
         // Assert
-        cy.get('@customerTable').contains('Tech Innovations').should('be.visible')
+        cy.contains('table', 'Tech Innovations').should('be.visible')
       })
     })
 
