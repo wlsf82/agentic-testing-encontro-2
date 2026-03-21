@@ -6,24 +6,17 @@ describe('EngageSphere Test Suite', () => {
       cy.setCookie('cookieConsent', 'declined')
       cy.visit('/')
     })
+
     it('successfully toggles between light and dark themes', () => {
-      // cy.get('button[aria-label^="theme "]')
-      //   .invoke('attr', 'aria-label')
-      //   .then((initialTheme) => {
       cy.get('body').should('have.attr', 'data-theme', 'light')
+
       cy.get('button[aria-label^="theme "]').click()
-          // cy.get('button[aria-label^="theme "]')
-          //   .invoke('attr', 'aria-label')
-      //   .should('not.equal', initialTheme)
+
       cy.get('body').should('have.attr', 'data-theme', 'dark')
 
-          // Toggle back and verify
       cy.get('button[aria-label^="theme "]').click()
-          // cy.get('button[aria-label^="theme "]')
-          //   .invoke('attr', 'aria-label')
-      //   .should('equal', initialTheme)
+
       cy.get('body').should('have.attr', 'data-theme', 'light')
-        // })
     })
 
     it('displays a personalized greeting when a name is entered', () => {
