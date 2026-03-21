@@ -25,6 +25,20 @@ describe('EngageSphere', () => {
       cy.get('body').should('have.attr', 'data-theme', 'light')
     })
 
+    it('displays a generic greeting when no name is entered', () => {
+      // Arrange
+     const currentDate = new Date().toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      })
+
+      // Assert
+      cy.contains('h2', 'Hi there!')
+        .should('be.visible')
+        .and('contain', currentDate)
+    })
+
     it('displays a personalized greeting when a name is entered', () => {
       // Arrange
       const testName = 'John Doe'
