@@ -1,6 +1,7 @@
 const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
+  projectId: 'nq6iti',
   allowCypressEnv: false,
   e2e: {
     baseUrl: 'https://engage-sphere.vercel.app/',

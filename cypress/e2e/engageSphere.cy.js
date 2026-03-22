@@ -279,6 +279,20 @@ describe('EngageSphere', () => {
       cy.get('@customerTable').should('be.visible')
       cy.contains('Customer Details').should('not.exist')
     })
+
+    it('disables name input field on the customer details view and enables it after returning', () => {
+      // Act
+      cy.contains('button', 'View').click()
+
+      // Assert
+      cy.get('[data-testid="name"]').should('be.disabled')
+
+      // Act
+      cy.contains('button', 'Back').click()
+
+      // Assert
+      cy.get('[data-testid="name"]').should('be.enabled')
+    })
   })
 
   context('External Integrations and Data Export', () => {
