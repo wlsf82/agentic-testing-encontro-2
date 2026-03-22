@@ -391,12 +391,33 @@ describe('EngageSphere', () => {
       // Arrange
       const apiUrl = Cypress.expose('apiUrl')
 
+      cy.intercept('GET', `${apiUrl}/customers?page=1&limit=10&size=All&industry=All`, {
+        statusCode: 200,
+        body: {
+          customers: Array.from({ length: 10 }, (_, i) => ({
+            id: i + 1,
+            name: `Small Business ${i + 1}`,
+            employees: 20 + i,
+            industry: 'Retail',
+            size: 'Small'
+          })),
+          pageInfo: {
+            currentPage: 1,
+            totalPages: 2,
+            totalCustomers: 21
+          }
+        }
+      }).as('initialLoadForPagination')
+
+      cy.visit('/')
+      cy.wait('@initialLoadForPagination')
+
       cy.intercept('GET', `${apiUrl}/customers?page=2&limit=10&size=Small&industry=All`, {
         statusCode: 200,
         body: {
           customers: [
             {
-              id: 50,
+              id: 11,
               name: 'Small Business Page 2',
               employees: 45,
               industry: 'Retail',
@@ -405,8 +426,8 @@ describe('EngageSphere', () => {
           ],
           pageInfo: {
             currentPage: 2,
-            totalPages: 3,
-            totalCustomers: 25
+            totalPages: 2,
+            totalCustomers: 21
           }
         }
       }).as('paginationWithFilter')
